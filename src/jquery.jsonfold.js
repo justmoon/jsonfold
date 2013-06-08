@@ -43,13 +43,44 @@
     },
     collapse: function (depth)
     {
-      // XXX Honor depth parameter
-      $(this.element).find('.expanded').removeClass("expanded");
+      var $sel = this._select(depth);
+      $sel.removeClass("expanded");
     },
     expand: function (depth)
     {
-      // XXX Honor depth parameter
-      $(this.element).find('ul > li').addClass("expanded");
+      var $sel = this._select(depth);
+      $sel.addClass("expanded");
+    },
+    toggle: function (depth)
+    {
+      var $sel = this._select(depth);
+      $sel.toggleClass("expanded");
+    },
+    _select: function (depth)
+    {
+      var $el = $(this.element), $sel;
+      if ("string" === typeof depth) {
+        // Expand/collapse nodes by name
+        if (!/^[^\(\)]+$/.exec(depth))
+          throw new Error("JSON member names cannot contain parentheses");
+
+        $sel = $el.find('ul > li > span.name:contains('+depth+')').parent();
+      } else if ("number" === typeof depth) {
+        // Expand n levels
+        depth = +depth;
+
+        if (depth > 10000) throw new Error("Invalid depth");
+        if (depth <= 0) return $();
+
+        $sel = $el.find("> ul > li");
+        while (depth > 1) {
+          depth--;
+          $sel = $sel.find("> ul > li").andSelf();
+        }
+      } else {
+        $sel = $el.find('ul > li');
+      }
+      return $sel;
     },
 		_render: function (v, ct, depth)
     {
